@@ -1,0 +1,6 @@
+[Unit]
+Description=Dish Position Monitor
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/dish_position_monitor.sh
