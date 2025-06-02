@@ -319,15 +319,10 @@
         
         // Update dish position
         function updateDishPosition(azimuth, elevation) {
-            // dish.style.transform = `rotateY(${azimuth}deg) rotateX(${-elevation}deg)`;
-            // azimuthValue.textContent = `${azimuth}°`;
-            // elevationValue.textContent = `${elevation}°`;
-            // currentAzimuth.textContent = azimuth;
-            // currentElevation.textContent = elevation;
 
-  		//Convert to numbers and validate
+  		  //Convert to numbers and validate
     		azimuth = Number(azimuth) || 0;
-   		elevation = Math.max(0, Math.min(90, Number(elevation) || 0));
+   		  elevation = Math.max(0, Math.min(90, Number(elevation) || 0));
     
     		// Apply transformation with forced 3D rendering
     		dish.style.transform = `
@@ -356,34 +351,70 @@
         });
         
         // Function to read from text file
-async function readPositionFromFile() {
-    const filePath = filePathInput.value.trim();
-    console.log("Trying to read:", filePath); // Debug
-    
-    try {
-        const response = await fetch(filePath);
-        console.log("Response status:", response.status); // Debug
-        const text = await response.text();
-        console.log("File content:", text); // Debug
-        
-        // Parse the text file (expected format: "azimuth,elevation")
-        const [azimuth, elevation] = text.trim().split(',').map(Number);
-                
-       	if (!isNaN(azimuth) && !isNaN(elevation)) {
-      	 // Update sliders and dish position
-         azimuthInput.value = azimuth;
-         elevationInput.value = elevation;
-         updateDishPosition(azimuth, elevation);
-		}
-    } catch (error) {
-        console.error("Full error:", error); // Detailed debug
-    }
-}
+	async function readPositionFromFile() {
+	    const filePath = filePathInput.value.trim();
+	    console.log("Trying to read:", filePath); // Debug
+	    
+	    try {
+		const response = await fetch(filePath);
+		console.log("Response status:", response.status); // Debug
+		const text = await response.text();
+		console.log("File content:", text); // Debug
+		
+		// Parse the text file (expected format: "azimuth,elevation")
+		const [azimuth, elevation] = text.trim().split(',').map(Number);
+		        
+	       	if (!isNaN(azimuth) && !isNaN(elevation)) {
+		      	 // Update sliders and dish position
+			 azimuthInput.value = azimuth;
+			 elevationInput.value = elevation;
+			 updateDishPosition(azimuth, elevation);
+			}
+	    } catch (error) {
+		console.error("Full error:", error); // Detailed debug
+		// Optional: Show error to user
+		lastUpdated.textContent = `${error.message}`;
+	    }
+	}
+        // Function to request position from a server
+        async function getPositionFromServer() {
+        	console.log("Requesting for position");
+    		try {
+			const response = await fetch('http://localhost:1900');
+			const result = await response.text();
+			console.log("Script output:", result);
+			
+			// Parse the text file (expected format: "azimuth,elevation")
+			const [azimuth, elevation] = result.trim().split(',').map(Number);
+			
+			if (!isNaN(azimuth) && !isNaN(elevation)) {
+			      	 // Update sliders and dish position
+				 azimuthInput.value = azimuth;
+				 elevationInput.value = elevation;
+				 updateDishPosition(azimuth, elevation);
+			}
+	    	} catch (error) {
+			console.error("Error running script:", error);
+			lastUpdated.textContent = `${error.message}`;
+	    }
+        }
         // Button click event
-        updateBtn.addEventListener('click', readPositionFromFile);
+        updateBtn.addEventListener('click', getPositionFromServer); // readPositionFromFile);
         
         // Initialize
         updateDishPosition(0, 0);
+
+        // Auto-refresh every 5 seconds
+        const refreshInterval = setInterval(() => {
+            console.log("Auto-refreshing position...");
+            getPositionFromServer();
+        }, 10000); // 10000 milliseconds = 10 seconds
+        
+        // Optional: Clean up interval when page unloads
+        window.addEventListener('beforeunload', () => {
+            clearInterval(refreshInterval);
+        });
+
     </script>
 </body>
 </html>
